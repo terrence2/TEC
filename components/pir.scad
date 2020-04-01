@@ -44,6 +44,30 @@ module adafruit_pir() {
     }
 }
 
+module adafruit_pir_standoffs(extra_depth = 0) {
+    board_h = adafruit_pir_board_height();
+    board_w = adafruit_pir_board_width();
+    board_d = adafruit_pir_board_depth();
+    hole_radius = adafruit_pir_screw_hole_radius();
+    so_radius = 2 * hole_radius;
+    so_height = adafruit_pir_diffuser_square_depth() + extra_depth;
+    hole_to_side = adafruit_pir_screw_hole_to_side();
+    predrill_radius = 0.4;
+    difference() {
+        union() {
+            translate([hole_radius + hole_to_side, board_h / 2, board_d])
+                cylinder(r = so_radius, h = so_height, $fn=50);
+            translate([board_w - hole_radius - hole_to_side, board_h / 2, board_d])
+                cylinder(r = so_radius, h = so_height, $fn=50);
+        }
+        translate([hole_radius + hole_to_side, board_h / 2, board_d - 1])
+            cylinder(r = predrill_radius, h = so_height, $fn=50);
+        translate([board_w - hole_radius - hole_to_side, board_h / 2, board_d - 1])
+            cylinder(r = predrill_radius, h = so_height, $fn=50);
+    }
+
+}
+
 module adafruit_pir_cutout() {
     board_h = adafruit_pir_board_height();
     board_w = adafruit_pir_board_width();
@@ -58,4 +82,5 @@ module adafruit_pir_cutout() {
 }
 
 adafruit_pir();
+adafruit_pir_standoffs();
 adafruit_pir_cutout();

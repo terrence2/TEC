@@ -21,6 +21,8 @@ module case_bottom() {
         case_outer();
         translate([-10, -10, case_split_height])
             cube([case_width * 2, case_height * 2, case_depth * 2]);
+        __case_bottom_closure_cutouts();
+        __case_strain_relief();
     }
 }
 
@@ -106,8 +108,8 @@ function case_closure_positions() = [
         case_wall + case_standoff_r
     ],
     [
-        case_width /*- case_standoff_r*/ - case_wall,
-        case_wall /*+ case_standoff_r*/
+        case_width - 2 /*- case_standoff_r*/ - case_wall,
+        case_wall + 2/*+ case_standoff_r*/
     ],
     [
         case_wall + case_standoff_r,
@@ -120,12 +122,27 @@ function case_closure_positions() = [
 ];
 
 module __case_top_closure_mounts() {
-    z_off = case_split_height;
     xy = case_closure_positions();
     for (i = [0:3]) {
         translate([xy[i][0], xy[i][1], case_split_height + 0.1 - 1])
             m3_insert_cutout();
     }
+}
+
+module __case_bottom_closure_cutouts() {
+    xy = case_closure_positions();
+    for (i = [0:3]) {
+        translate([xy[i][0], xy[i][1], -2])
+            m3_case_screw_cutout();
+    }
+}
+
+module m3_case_screw_cutout() {
+    cap_d = 8;
+    thread_d = 3.1;
+
+    cylinder(d = cap_d, h = case_split_height, $fn=30);
+    cylinder(d = thread_d, h = 2 * case_split_height, $fn=20);
 }
 
 module __case_top_pir_cutout() {
@@ -138,12 +155,15 @@ module __case_top_pir_cutout() {
 }
 
 module __case_top_pir_supports() {
-    /*
     pir_w = adafruit_pir_board_width() + 2;
     pir_h = adafruit_pir_board_height() + 2;
-    translate([(eye_po_h - pir_w) / 2, case_height - eye_po_offset - eye_po_h / 2 - pir_h / 2, 0])
-        cylinder(r=2, h=2, $fn=10);
-    */
+    translate([
+        (eye_po_h - adafruit_pir_board_width()) / 2,
+        case_height - eye_po_offset - eye_po_h / 2 - adafruit_pir_board_height() / 2,
+        case_depth - 2])
+    {
+        adafruit_pir_standoffs(extra_depth = 0.5);
+    }
 }
 
 case_width = 60;
