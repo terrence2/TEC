@@ -1,49 +1,37 @@
-$fn=40;
-
+/** Along the x, y, z axes respectively */
 function raspberry_pi4_pcb_size() = [85, 56, 1.5];
+
+/** As x0, x1, y0, y1 -- combine to get the points. */
 function raspberry_pi4_hole_offsets() = [3.5, 3.5 + 58, 3.5, 3.5 + 49];
 
-module __pcb() {
-    sz = raspberry_pi4_pcb_size();
-    w = sz[0];
-    h = sz[1];
-    d = sz[2];
+/** The model of standoff that is intended. */
+function raspberry_pi4_standoff_insert_model() = "https://www.mcmaster.com/94180a321";
+function raspberry_pi4_standoff_insert_length() = 3.4;
 
-    color("MediumSeaGreen")
-    linear_extrude(height = d) {
-        hull() {
-            translate([3, 3, 0])
-                circle(r=3);
-            translate([w - 3, 3, 0])
-                circle(r=3);
-            translate([w - 3, h - 3, 0])
-                circle(r=3);
-            translate([3, h - 3, 0])
-                circle(r=3);
+/** The height of the included standoffs. */
+function raspberry_pi4_standoff_height() = raspberry_pi4_standoff_insert_length() * 2;
+
+/**
+ * Origin is the lower left corner, at the bottom of the pcb,
+ * with the USB oriented to the right.
+ */
+module raspberry_pi4() {
+    difference() {
+        union() {
+            __rpi4_pcb();
+            __rpi4_chips();
+            __rpi4_connectors(false);
         }
+        __rpi4_drill_mask();
     }
 }
 
-module __drill_mask() {
-    hole_diam = 2.7;
-
-    offsets = raspberry_pi4_hole_offsets();
-    x0 = offsets[0];
-    x1 = offsets[1];
-    y0 = offsets[2];
-    y1 = offsets[3];
-
-    sz = raspberry_pi4_pcb_size();
-    d = sz[2];
-
-    translate([x0, y0, -d])
-        cylinder(d=hole_diam, h=3 * d);
-    translate([x1, y0, -d])
-        cylinder(d=hole_diam, h=3 * d);
-    translate([x0, y1, -d])
-        cylinder(d=hole_diam, h=3 * d);
-    translate([x1, y1, -d])
-        cylinder(d=hole_diam, h=3 * d);
+/**
+ * Back and side-plane cuts to expose board connectors. Intended for use as the second
+ * argument to difference().
+ */
+module raspberry_pi4_cutouts() {
+    __rpi4_connectors(true);
 }
 
 /**
@@ -57,11 +45,11 @@ module raspberry_pi4_standoffs() {
     y0 = offsets[2];
     y1 = offsets[3];
 
-    insert_length = 3.4;
+    insert_length = raspberry_pi4_standoff_insert_length();
     hole_diam = 4.2;
     hole_depth = insert_length * 1.5;
     standoff_diameter = hole_diam * 1.75;
-    standoff_height = insert_length * 2;
+    standoff_height = raspberry_pi4_standoff_height();
 
     difference() {
         translate([x0, y0, -standoff_height])
@@ -89,8 +77,52 @@ module raspberry_pi4_standoffs() {
     }
 }
 
+module __rpi4_pcb() {
+    sz = raspberry_pi4_pcb_size();
+    w = sz[0];
+    h = sz[1];
+    d = sz[2];
 
-module __connectors(make_cutouts) {
+    color("MediumSeaGreen")
+    linear_extrude(height = d) {
+        hull() {
+            translate([3, 3, 0])
+                circle(r=3);
+            translate([w - 3, 3, 0])
+                circle(r=3);
+            translate([w - 3, h - 3, 0])
+                circle(r=3);
+            translate([3, h - 3, 0])
+                circle(r=3);
+        }
+    }
+}
+
+module __rpi4_drill_mask() {
+    hole_diam = 2.7;
+
+    offsets = raspberry_pi4_hole_offsets();
+    x0 = offsets[0];
+    x1 = offsets[1];
+    y0 = offsets[2];
+    y1 = offsets[3];
+
+    sz = raspberry_pi4_pcb_size();
+    d = sz[2];
+
+    translate([x0, y0, -d])
+        cylinder(d=hole_diam, h=3 * d);
+    translate([x1, y0, -d])
+        cylinder(d=hole_diam, h=3 * d);
+    translate([x0, y1, -d])
+        cylinder(d=hole_diam, h=3 * d);
+    translate([x1, y1, -d])
+        cylinder(d=hole_diam, h=3 * d);
+}
+
+
+
+module __rpi4_connectors(make_cutouts) {
     if (make_cutouts) {
         __connectors_inner("Red", 0.25, -0.4, 0.8);
     } else {
@@ -153,7 +185,7 @@ module __connectors_inner(clr, opacity, d_adj, ext) {
     }
 }
 
-module __chips() {
+module __rpi4_chips() {
     sz = raspberry_pi4_pcb_size();
     w = sz[0];
     h = sz[1];
@@ -173,25 +205,8 @@ module __chips() {
         cube([cw, ch, cd]);
 }
 
-/**
- * Origin is the lower left corner, at the bottom of the pcb,
- * with the USB oriented to the right.
- */
-module raspberry_pi4() {
-    difference() {
-        union() {
-            __pcb();
-            __chips();
-            __connectors(false);
-        }
-        __drill_mask();
-    }
-}
-
-module raspberry_pi4_cutouts() {
-    __connectors(true);
-}
-
+// Demo
+$fn=40;
 raspberry_pi4();
 raspberry_pi4_cutouts();
 raspberry_pi4_standoffs();
